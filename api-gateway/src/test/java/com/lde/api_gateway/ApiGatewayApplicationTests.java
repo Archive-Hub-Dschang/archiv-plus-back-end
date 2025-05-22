@@ -1,10 +1,10 @@
-package com.lde.gateaway_api;
+package com.lde.api_gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class GateawayApiApplicationTests {
+class ApiGatewayApplicationTests {
 
 	@Test
 	void contextLoads() {
