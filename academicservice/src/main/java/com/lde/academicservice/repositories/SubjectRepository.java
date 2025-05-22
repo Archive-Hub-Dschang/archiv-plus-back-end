@@ -1,9 +1,11 @@
-package com.lde.academicservice.repositories;
+package
+        com.lde.academicservice.repositories;
 
 import com.lde.academicservice.models.Subject;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import java.util.List;
 @Repository
-public interface SubjectRepository extends MongoRepository<Subject, String> {
+public interface SubjectRepository extends JpaRepository<Subject, Long> {
+
 }
