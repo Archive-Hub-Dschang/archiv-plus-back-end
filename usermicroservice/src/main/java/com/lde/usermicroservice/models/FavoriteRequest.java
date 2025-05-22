@@ -1,5 +1,6 @@
 package com.lde.usermicroservice.models;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
