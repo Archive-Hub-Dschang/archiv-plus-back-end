@@ -3,11 +3,10 @@ package com.lde.usermicroservice.dto;
 import lombok.Data;
 
 @Data
-
-public class SubjectDTO {
+public class DocumentDTO {
     private String id;
     private String name  ;
-    private String file_path;
-    private String correction_id;
+    private String filePath;
+    private String correctionId;
 
 }
