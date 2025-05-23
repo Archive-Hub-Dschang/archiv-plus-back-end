@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Correction {
     @Id
     private String id;
-    private String subject_id;
+    private String doc_id;
     private String file_path;
     private String name;
 }
