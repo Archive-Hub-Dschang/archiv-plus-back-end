@@ -1,11 +1,10 @@
 package com.lde.usermicroservice.services;
 
 import com.lde.usermicroservice.clients.SubjectClient;
-import com.lde.usermicroservice.dtos.SubjectDTO;
+import com.lde.usermicroservice.dto.SubjectDTO;
 import com.lde.usermicroservice.models.LearnerFavorite;
 import com.lde.usermicroservice.repositories.LearnerFavoriteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
