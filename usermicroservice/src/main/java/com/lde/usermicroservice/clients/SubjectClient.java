@@ -1,6 +1,6 @@
 package com.lde.usermicroservice.clients;
 
-import com.lde.usermicroservice.dtos.SubjectDTO;
+import com.lde.usermicroservice.dto.SubjectDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
