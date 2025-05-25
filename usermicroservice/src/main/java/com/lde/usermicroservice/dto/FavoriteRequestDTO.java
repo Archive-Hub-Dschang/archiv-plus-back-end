@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class FavoriteRequestDTO {
-    private String userId;
-    private String documentId;
+    private Long userId;
+    private String examId;
 
 
 }
