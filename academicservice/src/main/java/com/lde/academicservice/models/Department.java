@@ -12,5 +12,4 @@ public class Department {
     @Id
     private String id;
     private String name;
-
 }

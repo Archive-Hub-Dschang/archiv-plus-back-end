@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @org.springframework.data.mongodb.core.mapping.Document(collection = "documents")
-public class DocumentAcademic {
+public class Document {
     @Id
     private String id;
 
@@ -63,7 +63,7 @@ public class DocumentAcademic {
 
     private String modifiedBy;
 
-    public DocumentAcademic() {
+    public Document() {
         this.uploadDate = LocalDateTime.now();
         this.lastModifiedDate = LocalDateTime.now();
         this.downloadCount = 0;

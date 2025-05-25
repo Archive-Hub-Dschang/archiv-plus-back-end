@@ -1,7 +1,7 @@
 package com.lde.academicservice.services;
 
-import com.lde.academicservice.models.DocumentAcademic;
-import com.lde.academicservice.repositories.DocumentAcademicRepository;
+import com.lde.academicservice.models.Document;
+import com.lde.academicservice.repositories.DocumentRepository;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
 class DocumentServiceTest {
 
     @Mock
-    private DocumentAcademicRepository documentRepository;
+    private DocumentRepository documentRepository;
 
     @Mock
     private GridFsTemplate gridFsTemplate;
@@ -56,15 +56,15 @@ class DocumentServiceTest {
     private ServletOutputStream servletOutputStream;
 
     @InjectMocks
-    private DocumentAcademicService documentService;
+    private DocumentService documentService;
 
-    private DocumentAcademic testDocument;
+    private Document testDocument;
     private final String TEST_ID = "test-id-123";
     private final String TEST_GRID_FS_ID = "grid-fs-id-123";
 
     @BeforeEach
     void setUp() {
-        testDocument = new DocumentAcademic();
+        testDocument = new Document();
         testDocument.setId(TEST_ID);
         testDocument.setFileName("test-file.pdf");
         testDocument.setContentType("application/pdf");
@@ -86,17 +86,17 @@ class DocumentServiceTest {
         when(multipartFile.getInputStream()).thenReturn(new ByteArrayInputStream("test content".getBytes()));
         ObjectId fakeId = new ObjectId("507f1f77bcf86cd799439011");
         when(gridFsTemplate.store(any(InputStream.class), anyString(), anyString())).thenReturn(fakeId);
-        when(documentRepository.save(any(DocumentAcademic.class))).thenReturn(testDocument);
+        when(documentRepository.save(any(Document.class))).thenReturn(testDocument);
 
         // When
-        DocumentAcademic result = documentService.uploadDocument(multipartFile, "dept-1", "subject-1", "field-1", "Test Author");
+        Document result = documentService.uploadDocument(multipartFile, "dept-1", "subject-1", "field-1","level-1" ,"Test Author");
 
         // Then
         assertNotNull(result);
         assertEquals("test-file.pdf", result.getFileName());
         assertEquals("application/pdf", result.getContentType());
         assertEquals(1024L, result.getFileSize());
-        verify(documentRepository).save(any(DocumentAcademic.class));
+        verify(documentRepository).save(any(Document.class));
         verify(gridFsTemplate).store(any(), anyString(), anyString());
     }
 
@@ -104,12 +104,12 @@ class DocumentServiceTest {
     void testGetAllDocuments_WithoutHidden() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
-        List<DocumentAcademic> documents = Arrays.asList(testDocument);
-        Page<DocumentAcademic> page = new PageImpl<>(documents, pageable, 1);
+        List<Document> documents = Arrays.asList(testDocument);
+        Page<Document> page = new PageImpl<>(documents, pageable, 1);
         when(documentRepository.findByIsHiddenFalse(pageable)).thenReturn(page);
 
         // When
-        Page<DocumentAcademic> result = documentService.getAllDocuments(pageable, false);
+        Page<Document> result = documentService.getAllDocuments(pageable, false);
 
         // Then
         assertNotNull(result);
@@ -122,12 +122,12 @@ class DocumentServiceTest {
     void testGetAllDocuments_WithHidden() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
-        List<DocumentAcademic> documents = Arrays.asList(testDocument);
-        Page<DocumentAcademic> page = new PageImpl<>(documents, pageable, 1);
+        List<Document> documents = Arrays.asList(testDocument);
+        Page<Document> page = new PageImpl<>(documents, pageable, 1);
         when(documentRepository.findAll(pageable)).thenReturn(page);
 
         // When
-        Page<DocumentAcademic> result = documentService.getAllDocuments(pageable, true);
+        Page<Document> result = documentService.getAllDocuments(pageable, true);
 
         // Then
         assertNotNull(result);
@@ -142,7 +142,7 @@ class DocumentServiceTest {
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.of(testDocument));
 
         // When
-        Optional<DocumentAcademic> result = documentService.getDocumentById(TEST_ID);
+        Optional<Document> result = documentService.getDocumentById(TEST_ID);
 
         // Then
         assertTrue(result.isPresent());
@@ -156,7 +156,7 @@ class DocumentServiceTest {
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
         // When
-        Optional<DocumentAcademic> result = documentService.getDocumentById(TEST_ID);
+        Optional<Document> result = documentService.getDocumentById(TEST_ID);
 
         // Then
         assertFalse(result.isPresent());
@@ -166,15 +166,15 @@ class DocumentServiceTest {
     @Test
     void testUpdateDocument_Success() {
         // Given
-        DocumentAcademic updateData = new DocumentAcademic();
+        Document updateData = new Document();
         updateData.setAuthor("Updated Author");
         updateData.setDepartmentId("dept-2");
 
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.of(testDocument));
-        when(documentRepository.save(any(DocumentAcademic.class))).thenReturn(testDocument);
+        when(documentRepository.save(any(Document.class))).thenReturn(testDocument);
 
         // When
-        DocumentAcademic result = documentService.updateDocument(TEST_ID, updateData);
+        Document result = documentService.updateDocument(TEST_ID, updateData);
 
         // Then
         assertNotNull(result);
@@ -185,7 +185,7 @@ class DocumentServiceTest {
     @Test
     void testUpdateDocument_NotFound() {
         // Given
-        DocumentAcademic updateData = new DocumentAcademic();
+        Document updateData = new Document();
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
         // When & Then
@@ -236,7 +236,7 @@ class DocumentServiceTest {
         when(gridFsOperations.getResource(gridFSFile)).thenReturn(resource);
         when(resource.getInputStream()).thenReturn(inputStream);
         when(httpServletResponse.getOutputStream()).thenReturn(servletOutputStream);
-        when(documentRepository.save(any(DocumentAcademic.class))).thenReturn(testDocument);
+        when(documentRepository.save(any(Document.class))).thenReturn(testDocument);
 
         // When
         documentService.downloadDocument(TEST_ID, httpServletResponse);
@@ -300,10 +300,10 @@ class DocumentServiceTest {
     void testHideDocument_Success() {
         // Given
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.of(testDocument));
-        when(documentRepository.save(any(DocumentAcademic.class))).thenReturn(testDocument);
+        when(documentRepository.save(any(Document.class))).thenReturn(testDocument);
 
         // When
-        DocumentAcademic result = documentService.hideDocument(TEST_ID, "Inappropriate content", "admin");
+        Document result = documentService.hideDocument(TEST_ID, "Inappropriate content", "admin");
 
         // Then
         assertNotNull(result);
@@ -337,10 +337,10 @@ class DocumentServiceTest {
         testDocument.setHiddenDate(LocalDateTime.now());
 
         when(documentRepository.findById(TEST_ID)).thenReturn(Optional.of(testDocument));
-        when(documentRepository.save(any(DocumentAcademic.class))).thenReturn(testDocument);
+        when(documentRepository.save(any(Document.class))).thenReturn(testDocument);
 
         // When
-        DocumentAcademic result = documentService.unhideDocument(TEST_ID, "admin");
+        Document result = documentService.unhideDocument(TEST_ID, "admin");
 
         // Then
         assertNotNull(result);
@@ -356,11 +356,11 @@ class DocumentServiceTest {
     void testGetHiddenDocuments() {
         // Given
         testDocument.setHidden(true);
-        List<DocumentAcademic> hiddenDocs = Arrays.asList(testDocument);
+        List<Document> hiddenDocs = Arrays.asList(testDocument);
         when(documentRepository.findByIsHiddenTrue()).thenReturn(hiddenDocs);
 
         // When
-        List<DocumentAcademic> result = documentService.getHiddenDocuments();
+        List<Document> result = documentService.getHiddenDocuments();
 
         // Then
         assertNotNull(result);
@@ -372,11 +372,11 @@ class DocumentServiceTest {
     @Test
     void testGetVisibleDocuments() {
         // Given
-        List<DocumentAcademic> visibleDocs = Arrays.asList(testDocument);
+        List<Document> visibleDocs = Arrays.asList(testDocument);
         when(documentRepository.findByIsHiddenFalse()).thenReturn(visibleDocs);
 
         // When
-        List<DocumentAcademic> result = documentService.getVisibleDocuments();
+        List<Document> result = documentService.getVisibleDocuments();
 
         // Then
         assertNotNull(result);
@@ -388,11 +388,11 @@ class DocumentServiceTest {
     @Test
     void testGetDocumentsByDepartment() {
         // Given
-        List<DocumentAcademic> documents = Arrays.asList(testDocument);
+        List<Document> documents = Arrays.asList(testDocument);
         when(documentRepository.findByDepartmentId("dept-1")).thenReturn(documents);
 
         // When
-        List<DocumentAcademic> result = documentService.getDocumentsByDepartment("dept-1");
+        List<Document> result = documentService.getDocumentsByDepartment("dept-1");
 
         // Then
         assertNotNull(result);
@@ -404,7 +404,7 @@ class DocumentServiceTest {
     @Test
     void testGetMostDownloadedDocuments() {
         // Given
-        List<DocumentAcademic> documents = Arrays.asList(testDocument);
-        Page<DocumentAcademic> page = new PageImpl<>(documents);
+        List<Document> documents = Arrays.asList(testDocument);
+        Page<Document> page = new PageImpl<>(documents);
     }
 }

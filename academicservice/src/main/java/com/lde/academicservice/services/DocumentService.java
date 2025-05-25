@@ -1,7 +1,7 @@
 package com.lde.academicservice.services;
 
-import com.lde.academicservice.models.DocumentAcademic;
-import com.lde.academicservice.repositories.DocumentAcademicRepository;
+import com.lde.academicservice.models.Document;
+import com.lde.academicservice.repositories.DocumentRepository;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,15 +25,15 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class DocumentAcademicService {
+public class DocumentService {
 
-    private final DocumentAcademicRepository documentRepository;
+    private final DocumentRepository documentRepository;
     private final GridFsTemplate gridFsTemplate;
     private final GridFsOperations gridFsOperations;
 
     // CREATE - Upload document
-    public DocumentAcademic uploadDocument(MultipartFile file, String departmentId, String subjectId,
-                                           String fieldId, String author) throws IOException {
+    public Document uploadDocument(MultipartFile file, String departmentId, String subjectId,
+                                   String fieldId, String levelId, String author) throws IOException {
         // Store file in GridFS
         String gridFsId = gridFsTemplate.store(
                 file.getInputStream(),
@@ -42,13 +42,14 @@ public class DocumentAcademicService {
         ).toString();
 
         // Create document metadata
-        DocumentAcademic document = new DocumentAcademic();
+        Document document = new Document();
         document.setFileName(file.getOriginalFilename());
         document.setContentType(file.getContentType());
         document.setFileSize(file.getSize());
         document.setGridFsId(gridFsId);
         document.setDepartmentId(departmentId);
         document.setSubjectId(subjectId);
+        document.setLevelId(levelId);
         document.setFieldId(fieldId);
         document.setAuthor(StringUtils.hasText(author) ? author : "Anonymous");
 
@@ -56,7 +57,7 @@ public class DocumentAcademicService {
     }
 
     // READ - Get all documents with pagination (with option to include hidden)
-    public Page<DocumentAcademic> getAllDocuments(Pageable pageable, boolean includeHidden) {
+    public Page<Document> getAllDocuments(Pageable pageable, boolean includeHidden) {
         if (includeHidden) {
             return documentRepository.findAll(pageable);
         } else {
@@ -65,49 +66,49 @@ public class DocumentAcademicService {
     }
 
     // READ - Get document by ID
-    public Optional<DocumentAcademic> getDocumentById(String id) {
+    public Optional<Document> getDocumentById(String id) {
         return documentRepository.findById(id);
     }
 
     // READ - Get documents by department
-    public List<DocumentAcademic> getDocumentsByDepartment(String departmentId) {
+    public List<Document> getDocumentsByDepartment(String departmentId) {
         return documentRepository.findByDepartmentId(departmentId);
     }
 
     // READ - Get documents by subject
-    public List<DocumentAcademic> getDocumentsBySubject(String subjectId) {
+    public List<Document> getDocumentsBySubject(String subjectId) {
         return documentRepository.findBySubjectId(subjectId);
     }
 
     // READ - Get documents by field
-    public List<DocumentAcademic> getDocumentsByField(String fieldId) {
+    public List<Document> getDocumentsByField(String fieldId) {
         return documentRepository.findByFieldId(fieldId);
     }
 
     // READ - Get documents by author
-    public List<DocumentAcademic> getDocumentsByAuthor(String author) {
+    public List<Document> getDocumentsByAuthor(String author) {
         return documentRepository.findByAuthor(author);
     }
     // READ - Get documents by Level
-    public List<DocumentAcademic> getDocumentsByLevel(String levelId) {
+    public List<Document> getDocumentsByLevel(String levelId) {
         return documentRepository.findByLevelId(levelId);
     }
     // READ - Search documents by filename
-    public List<DocumentAcademic> searchDocumentsByFilename(String filename) {
+    public List<Document> searchDocumentsByFilename(String filename) {
         return documentRepository.findByFileNameContainingIgnoreCase(filename);
     }
 
     // READ - Get most downloaded documents
-    public List<DocumentAcademic> getMostDownloadedDocuments(int limit) {
+    public List<Document> getMostDownloadedDocuments(int limit) {
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "downloadCount"));
         return documentRepository.findAll(pageable).getContent();
     }
 
     // UPDATE - Update document metadata
-    public DocumentAcademic updateDocument(String id, DocumentAcademic documentUpdate) {
-        Optional<DocumentAcademic> existingDoc = documentRepository.findById(id);
+    public Document updateDocument(String id, Document documentUpdate) {
+        Optional<Document> existingDoc = documentRepository.findById(id);
         if (existingDoc.isPresent()) {
-            DocumentAcademic document = existingDoc.get();
+            Document document = existingDoc.get();
 
             // Update only non-null fields
             if (StringUtils.hasText(documentUpdate.getAuthor())) {
@@ -133,7 +134,7 @@ public class DocumentAcademicService {
 
     // DELETE - Delete document
     public void deleteDocument(String id) {
-        Optional<DocumentAcademic> document = documentRepository.findById(id);
+        Optional<Document> document = documentRepository.findById(id);
         if (document.isPresent()) {
             // Delete file from GridFS
             gridFsTemplate.delete(Query.query(Criteria.where("_id").is(document.get().getGridFsId())));
@@ -147,13 +148,13 @@ public class DocumentAcademicService {
 
     // DOWNLOAD - Download document with count tracking AFTER successful download
     public void downloadDocument(String id, HttpServletResponse response) throws IOException {
-        Optional<DocumentAcademic> documentOpt = documentRepository.findById(id);
+        Optional<Document> documentOpt = documentRepository.findById(id);
         if (documentOpt.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        DocumentAcademic document = documentOpt.get();
+        Document document = documentOpt.get();
 
         // Check if document is hidden
         if (document.isHidden()) {
@@ -198,7 +199,7 @@ public class DocumentAcademicService {
 
     // Alternative method with more robust download tracking
     public void downloadDocumentWithTracking(String id, HttpServletResponse response) throws IOException {
-        DocumentAcademic document = getDocumentById(id)
+        Document document = getDocumentById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         GridFSFile gridFSFile = gridFsTemplate.findOne(
@@ -245,18 +246,18 @@ public class DocumentAcademicService {
     }
 
     // UTILITY - Get download statistics
-    public List<DocumentAcademic> getDocumentsByDownloadCount(int minDownloads) {
+    public List<Document> getDocumentsByDownloadCount(int minDownloads) {
         return documentRepository.findByDownloadCountGreaterThanEqual(minDownloads);
     }
 
     // UTILITY - Get recent documents
-    public List<DocumentAcademic> getRecentDocuments(int limit) {
+    public List<Document> getRecentDocuments(int limit) {
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "uploadDate"));
         return documentRepository.findAll(pageable).getContent();
     }
 
     // UTILITY - Get documents uploaded in date range
-    public List<DocumentAcademic> getDocumentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<Document> getDocumentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return documentRepository.findByUploadDateBetween(startDate, endDate);
     }
 
@@ -268,15 +269,15 @@ public class DocumentAcademicService {
     // UTILITY - Get total downloads count
     public long getTotalDownloadsCount() {
         return documentRepository.findAll().stream()
-                .mapToLong(DocumentAcademic::getDownloadCount)
+                .mapToLong(Document::getDownloadCount)
                 .sum();
     }
 
     // HIDE/UNHIDE - Hide document
-    public DocumentAcademic hideDocument(String id, String reason, String hiddenBy) {
-        Optional<DocumentAcademic> documentOpt = documentRepository.findById(id);
+    public Document hideDocument(String id, String reason, String hiddenBy) {
+        Optional<Document> documentOpt = documentRepository.findById(id);
         if (documentOpt.isPresent()) {
-            DocumentAcademic document = documentOpt.get();
+            Document document = documentOpt.get();
             document.hide(reason, hiddenBy);
             return documentRepository.save(document);
         }
@@ -284,10 +285,10 @@ public class DocumentAcademicService {
     }
 
     // HIDE/UNHIDE - Unhide document
-    public DocumentAcademic unhideDocument(String id, String modifiedBy) {
-        Optional<DocumentAcademic> documentOpt = documentRepository.findById(id);
+    public Document unhideDocument(String id, String modifiedBy) {
+        Optional<Document> documentOpt = documentRepository.findById(id);
         if (documentOpt.isPresent()) {
-            DocumentAcademic document = documentOpt.get();
+            Document document = documentOpt.get();
             document.unhide(modifiedBy);
             return documentRepository.save(document);
         }
@@ -295,12 +296,12 @@ public class DocumentAcademicService {
     }
 
     // READ - Get hidden documents
-    public List<DocumentAcademic> getHiddenDocuments() {
+    public List<Document> getHiddenDocuments() {
         return documentRepository.findByIsHiddenTrue();
     }
 
     // READ - Get visible documents only
-    public List<DocumentAcademic> getVisibleDocuments() {
+    public List<Document> getVisibleDocuments() {
         return documentRepository.findByIsHiddenFalse();
     }
 

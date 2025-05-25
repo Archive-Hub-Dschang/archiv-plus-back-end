@@ -1,6 +1,6 @@
 package com.lde.academicservice.repositories;
 
-import com.lde.academicservice.models.DocumentAcademic;
+import com.lde.academicservice.models.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -12,69 +12,69 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface DocumentAcademicRepository extends MongoRepository<DocumentAcademic, String> {
+public interface DocumentRepository extends MongoRepository<Document, String> {
 
     // Find documents by department
-    List<DocumentAcademic> findByDepartmentId(String departmentId);
+    List<Document> findByDepartmentId(String departmentId);
 
     // Find documents by subject
-    List<DocumentAcademic> findBySubjectId(String subjectId);
+    List<Document> findBySubjectId(String subjectId);
 
     // Find documents by field
-    List<DocumentAcademic> findByFieldId(String fieldId);
+    List<Document> findByFieldId(String fieldId);
 
     // Find documents by author
-    List<DocumentAcademic> findByAuthor(String author);
+    List<Document> findByAuthor(String author);
 
     // Find documents by level
-    List<DocumentAcademic> findByLevelId(String levelId);
+    List<Document> findByLevelId(String levelId);
 
     // Search documents by filename (case insensitive)
-    List<DocumentAcademic> findByFileNameContainingIgnoreCase(String filename);
+    List<Document> findByFileNameContainingIgnoreCase(String filename);
 
     // Find documents by content type
-    List<DocumentAcademic> findByContentType(String contentType);
+    List<Document> findByContentType(String contentType);
 
     // Find documents with download count greater than or equal to specified value
-    List<DocumentAcademic> findByDownloadCountGreaterThanEqual(int minDownloads);
+    List<Document> findByDownloadCountGreaterThanEqual(int minDownloads);
 
     // Find documents uploaded between two dates
-    List<DocumentAcademic> findByUploadDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Document> findByUploadDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     // Find documents uploaded after a specific date
-    List<DocumentAcademic> findByUploadDateAfter(LocalDateTime date);
+    List<Document> findByUploadDateAfter(LocalDateTime date);
 
     // Find documents uploaded before a specific date
-    List<DocumentAcademic> findByUploadDateBefore(LocalDateTime date);
+    List<Document> findByUploadDateBefore(LocalDateTime date);
 
     // Custom query to find documents by multiple criteria
     @Query("{ 'departmentId': ?0, 'subjectId': ?1 }")
-    List<DocumentAcademic> findByDepartmentAndSubject(String departmentId, String subjectId);
+    List<Document> findByDepartmentAndSubject(String departmentId, String subjectId);
 
     // Custom query to find documents by department and field
     @Query("{ 'departmentId': ?0, 'fieldId': ?1 }")
-    List<DocumentAcademic> findByDepartmentAndField(String departmentId, String fieldId);
+    List<Document> findByDepartmentAndField(String departmentId, String fieldId);
 
     // Custom query to find documents by subject and field
     @Query("{ 'subjectId': ?0, 'fieldId': ?1 }")
-    List<DocumentAcademic> findBySubjectAndField(String subjectId, String fieldId);
+    List<Document> findBySubjectAndField(String subjectId, String fieldId);
 
     // Custom query to find top downloaded documents
     @Query(value = "{}", sort = "{ 'downloadCount': -1 }")
-    List<DocumentAcademic> findTopByDownloadCount();
+    List<Document> findTopByDownloadCount();
 
     // Custom query to find recent documents
     @Query(value = "{}", sort = "{ 'uploadDate': -1 }")
-    List<DocumentAcademic> findRecentDocuments();
+    List<Document> findRecentDocuments();
 
     // Find documents by file size range
-    List<DocumentAcademic> findByFileSizeBetween(long minSize, long maxSize);
+    List<Document> findByFileSizeBetween(long minSize, long maxSize);
 
     // Find documents larger than specified size
-    List<DocumentAcademic> findByFileSizeGreaterThan(long size);
+    List<Document> findByFileSizeGreaterThan(long size);
 
     // Find documents smaller than specified size
-    List<DocumentAcademic> findByFileSizeLessThan(long size);
+    List<Document> findByFileSizeLessThan(long size);
 
     // Count documents by department
     long countByDepartmentId(String departmentId);
@@ -90,28 +90,28 @@ public interface DocumentAcademicRepository extends MongoRepository<DocumentAcad
 
     // Custom aggregation query to get download statistics
     @Query(value = "{ 'departmentId': ?0 }", fields = "{ 'downloadCount': 1, 'fileName': 1 }")
-    List<DocumentAcademic> findDownloadStatsByDepartment(String departmentId);
+    List<Document> findDownloadStatsByDepartment(String departmentId);
 
     // Find visible documents (not hidden)
-    List<DocumentAcademic> findByIsHiddenFalse();
+    List<Document> findByIsHiddenFalse();
 
     // Find visible documents with pagination
-    Page<DocumentAcademic> findByIsHiddenFalse(Pageable pageable);
+    Page<Document> findByIsHiddenFalse(Pageable pageable);
 
     // Find hidden documents
-    List<DocumentAcademic> findByIsHiddenTrue();
+    List<Document> findByIsHiddenTrue();
 
     // Find documents by visibility status
-    List<DocumentAcademic> findByIsHidden(boolean isHidden);
+    List<Document> findByIsHidden(boolean isHidden);
 
     // Find visible documents by department
-    List<DocumentAcademic> findByDepartmentIdAndIsHiddenFalse(String departmentId);
+    List<Document> findByDepartmentIdAndIsHiddenFalse(String departmentId);
 
     // Find visible documents by subject
-    List<DocumentAcademic> findBySubjectIdAndIsHiddenFalse(String subjectId);
+    List<Document> findBySubjectIdAndIsHiddenFalse(String subjectId);
 
     // Find visible documents by field
-    List<DocumentAcademic> findByFieldIdAndIsHiddenFalse(String fieldId);
+    List<Document> findByFieldIdAndIsHiddenFalse(String fieldId);
 
     // Count visible documents
     long countByIsHiddenFalse();

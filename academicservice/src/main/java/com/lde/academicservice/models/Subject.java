@@ -12,4 +12,6 @@ public class Subject {
     @Id
     private  String id ;
     private String name;
+    private String description;
+    private String code;
 }

@@ -1,7 +1,7 @@
 package com.lde.academicservice.controllers;
 
-import com.lde.academicservice.models.DocumentAcademic;
-import com.lde.academicservice.services.DocumentAcademicService;
+import com.lde.academicservice.models.Document;
+import com.lde.academicservice.services.DocumentService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,90 +17,91 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/documents")
 @RequiredArgsConstructor
-public class DocumentAcademicController {
+public class DocumentController {
 
-    private final DocumentAcademicService documentService;
+    private final DocumentService documentService;
 
     // CREATE - Upload document
     @PostMapping("/upload")
-    public ResponseEntity<DocumentAcademic> upload(@RequestParam("file") MultipartFile file,
-                                                   @RequestParam String departmentId,
-                                                   @RequestParam String subjectId,
-                                                   @RequestParam String fieldId,
-                                                   @RequestParam(required = false) String author) throws IOException {
-        DocumentAcademic document = documentService.uploadDocument(file, departmentId, subjectId, fieldId, author);
+    public ResponseEntity<Document> upload(@RequestParam("file") MultipartFile file,
+                                           @RequestParam String departmentId,
+                                           @RequestParam String subjectId,
+                                           @RequestParam String fieldId,
+                                           @RequestParam String levelId,
+                                           @RequestParam(required = false) String author) throws IOException {
+        Document document = documentService.uploadDocument(file, departmentId, subjectId, fieldId,levelId,author);
         return ResponseEntity.ok(document);
     }
 
     // READ - Get all documents with pagination
     @GetMapping
-    public ResponseEntity<Page<DocumentAcademic>> getAllDocuments(Pageable pageable) {
-        Page<DocumentAcademic> documents = documentService.getAllDocuments(pageable,true);
+    public ResponseEntity<Page<Document>> getAllDocuments(Pageable pageable) {
+        Page<Document> documents = documentService.getAllDocuments(pageable,true);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Get document by ID
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentAcademic> getDocumentById(@PathVariable String id) {
-        Optional<DocumentAcademic> document = documentService.getDocumentById(id);
+    public ResponseEntity<Document> getDocumentById(@PathVariable String id) {
+        Optional<Document> document = documentService.getDocumentById(id);
         return document.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // READ - Get documents by department
     @GetMapping("/department/{departmentId}")
-    public ResponseEntity<List<DocumentAcademic>> getDocumentsByDepartment(@PathVariable String departmentId) {
-        List<DocumentAcademic> documents = documentService.getDocumentsByDepartment(departmentId);
+    public ResponseEntity<List<Document>> getDocumentsByDepartment(@PathVariable String departmentId) {
+        List<Document> documents = documentService.getDocumentsByDepartment(departmentId);
         return ResponseEntity.ok(documents);
     }
     // READ - Get documents by department
     @GetMapping("/level/{levelId}")
-    public ResponseEntity<List<DocumentAcademic>> getDocumentsByLevel(@PathVariable String levelId) {
-        List<DocumentAcademic> documents = documentService.getDocumentsByLevel(levelId);
+    public ResponseEntity<List<Document>> getDocumentsByLevel(@PathVariable String levelId) {
+        List<Document> documents = documentService.getDocumentsByLevel(levelId);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Get documents by subject
     @GetMapping("/subject/{subjectId}")
-    public ResponseEntity<List<DocumentAcademic>> getDocumentsBySubject(@PathVariable String subjectId) {
-        List<DocumentAcademic> documents = documentService.getDocumentsBySubject(subjectId);
+    public ResponseEntity<List<Document>> getDocumentsBySubject(@PathVariable String subjectId) {
+        List<Document> documents = documentService.getDocumentsBySubject(subjectId);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Get documents by field
     @GetMapping("/field/{fieldId}")
-    public ResponseEntity<List<DocumentAcademic>> getDocumentsByField(@PathVariable String fieldId) {
-        List<DocumentAcademic> documents = documentService.getDocumentsByField(fieldId);
+    public ResponseEntity<List<Document>> getDocumentsByField(@PathVariable String fieldId) {
+        List<Document> documents = documentService.getDocumentsByField(fieldId);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Get documents by author
     @GetMapping("/author/{author}")
-    public ResponseEntity<List<DocumentAcademic>> getDocumentsByAuthor(@PathVariable String author) {
-        List<DocumentAcademic> documents = documentService.getDocumentsByAuthor(author);
+    public ResponseEntity<List<Document>> getDocumentsByAuthor(@PathVariable String author) {
+        List<Document> documents = documentService.getDocumentsByAuthor(author);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Search documents by filename
     @GetMapping("/search")
-    public ResponseEntity<List<DocumentAcademic>> searchDocuments(@RequestParam String filename) {
-        List<DocumentAcademic> documents = documentService.searchDocumentsByFilename(filename);
+    public ResponseEntity<List<Document>> searchDocuments(@RequestParam String filename) {
+        List<Document> documents = documentService.searchDocumentsByFilename(filename);
         return ResponseEntity.ok(documents);
     }
 
     // READ - Get most downloaded documents
     @GetMapping("/popular")
-    public ResponseEntity<List<DocumentAcademic>> getMostDownloadedDocuments(@RequestParam(defaultValue = "10") int limit) {
-        List<DocumentAcademic> documents = documentService.getMostDownloadedDocuments(limit);
+    public ResponseEntity<List<Document>> getMostDownloadedDocuments(@RequestParam(defaultValue = "10") int limit) {
+        List<Document> documents = documentService.getMostDownloadedDocuments(limit);
         return ResponseEntity.ok(documents);
     }
 
     // UPDATE - Update document metadata
     @PutMapping("/{id}")
-    public ResponseEntity<DocumentAcademic> updateDocument(@PathVariable String id,
-                                                           @RequestBody DocumentAcademic documentUpdate) {
+    public ResponseEntity<Document> updateDocument(@PathVariable String id,
+                                                   @RequestBody Document documentUpdate) {
         try {
-            DocumentAcademic updatedDocument = documentService.updateDocument(id, documentUpdate);
+            Document updatedDocument = documentService.updateDocument(id, documentUpdate);
             return ResponseEntity.ok(updatedDocument);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -138,11 +139,11 @@ public class DocumentAcademicController {
     }
     // HIDE/UNHIDE - Hide document
     @PutMapping("/{id}/hide")
-    public ResponseEntity<DocumentAcademic> hideDocument(@PathVariable String id,
-                                                         @RequestParam String reason,
-                                                         @RequestParam String hiddenBy) {
+    public ResponseEntity<Document> hideDocument(@PathVariable String id,
+                                                 @RequestParam String reason,
+                                                 @RequestParam String hiddenBy) {
         try {
-            DocumentAcademic hiddenDocument = documentService.hideDocument(id, reason, hiddenBy);
+            Document hiddenDocument = documentService.hideDocument(id, reason, hiddenBy);
             return ResponseEntity.ok(hiddenDocument);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -152,10 +153,10 @@ public class DocumentAcademicController {
 
     // HIDE/UNHIDE - Unhide document
     @PutMapping("/{id}/unhide")
-    public ResponseEntity<DocumentAcademic> unhideDocument(@PathVariable String id,
-                                                           @RequestParam String modifiedBy) {
+    public ResponseEntity<Document> unhideDocument(@PathVariable String id,
+                                                   @RequestParam String modifiedBy) {
         try {
-            DocumentAcademic unhiddenDocument = documentService.unhideDocument(id, modifiedBy);
+            Document unhiddenDocument = documentService.unhideDocument(id, modifiedBy);
             return ResponseEntity.ok(unhiddenDocument);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -163,15 +164,15 @@ public class DocumentAcademicController {
     }
     // READ - Get hidden documents
     @GetMapping("/hidden")
-    public ResponseEntity<List<DocumentAcademic>> getHiddenDocuments() {
-        List<DocumentAcademic> hiddenDocuments = documentService.getHiddenDocuments();
+    public ResponseEntity<List<Document>> getHiddenDocuments() {
+        List<Document> hiddenDocuments = documentService.getHiddenDocuments();
         return ResponseEntity.ok(hiddenDocuments);
     }
 
     // GET - Get download statistics
     @GetMapping("/{id}/stats")
     public ResponseEntity<DocumentStats> getDocumentStats(@PathVariable String id) {
-        Optional<DocumentAcademic> document = documentService.getDocumentById(id);
+        Optional<Document> document = documentService.getDocumentById(id);
         if (document.isPresent()) {
             DocumentStats stats = new DocumentStats(
                     document.get().getId(),
