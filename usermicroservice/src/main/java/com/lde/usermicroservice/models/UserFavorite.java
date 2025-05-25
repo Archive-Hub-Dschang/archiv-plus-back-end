@@ -3,12 +3,12 @@ package com.lde.usermicroservice.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
 @Data
-@NoArgsConstructor
-@Entity(name = "users")
-public class User {
+public class UserFavorite {
     @Id
     private String id;
 
@@ -19,10 +19,7 @@ public class User {
         }
     }
 
-    private String username;
+    private String userId;
+    private String documentId;
 
-    @Column(unique = true)
-    private String email;
-
-    private String password;
 }
