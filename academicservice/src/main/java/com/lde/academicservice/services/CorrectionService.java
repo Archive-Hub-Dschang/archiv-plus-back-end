@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -29,16 +31,26 @@ public class CorrectionService {
             throw new IllegalStateException("Correction already exists for this exam");
         }
 
+        // 1. Nom unique pour le fichier
         String filename = UUID.randomUUID() + "_" + pdf.getOriginalFilename();
-        File uploadDir = new File("uploads/corrections");
-        if (!uploadDir.exists()) uploadDir.mkdirs();
 
-        File dest = new File(uploadDir, filename);
-        pdf.transferTo(dest);
+        // 2. Dossier absolu "uploads/corrections"
+        Path correctionPath = Paths.get(System.getProperty("user.dir"), "uploads", "corrections");
+        Files.createDirectories(correctionPath); // Crée le dossier si nécessaire
 
+        // 3. Enregistrement du fichier
+        Path filePath = correctionPath.resolve(filename);
+        pdf.transferTo(filePath.toFile());
+
+        // 4. URL publique
         String fileUrl = "/uploads/corrections/" + filename;
 
-        Correction correction = Correction.builder().examId(examId).pdfUrl(fileUrl).createdAt(LocalDate.now()).build();
+        // 5. Création et sauvegarde
+        Correction correction = Correction.builder()
+                .examId(examId)
+                .pdfUrl(fileUrl)
+                .createdAt(LocalDate.now())
+                .build();
 
         return correctionRepository.save(correction);
     }

@@ -9,6 +9,6 @@ public record CreateExamRequest(
         @NotNull MultipartFile pdf,
         @NotNull int year,
         @NotBlank String subjectId,
-        @NotNull String type
+        @NotNull String type // Doit être "CC" ou "EXAM"
 ) {
 }

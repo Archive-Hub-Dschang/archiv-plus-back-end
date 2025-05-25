@@ -25,6 +25,7 @@ public class ExamController {
             Exam created = examService.createExam(request);
             return ResponseEntity.ok(created);
         } catch (Exception e) {
+            e.printStackTrace(); // ou log l'erreur
             return ResponseEntity.badRequest().build();
         }
     }

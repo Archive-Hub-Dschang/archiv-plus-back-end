@@ -9,6 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -28,22 +31,29 @@ public class ExamService {
     public Exam createExam(CreateExamRequest request) throws IOException {
         MultipartFile file = request.pdf();
 
+        // 1. Créer un nom de fichier unique
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        File uploadDir = new File("uploads");
-        if (!uploadDir.exists()) uploadDir.mkdirs();
 
-        File dest = new File(uploadDir, filename);
-        file.transferTo(dest);
+        // 2. Déterminer un chemin absolu vers le dossier 'uploads' dans le répertoire du projet
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads");
+        Files.createDirectories(uploadPath); // Crée le dossier s’il n’existe pas
 
+        // 3. Construire le chemin complet du fichier à enregistrer
+        Path filePath = uploadPath.resolve(filename);
+        file.transferTo(filePath.toFile());
+
+        // 4. Construire l’URL d’accès (pour un serveur configuré pour servir /uploads)
         String fileUrl = "/uploads/" + filename;
 
-        Exam exam = Exam.builder().
-                title(request.title()).
-                type(ExamType.valueOf(request.type().toUpperCase())).
-                year(request.year()).pdfUrl(fileUrl).
-                subjectId(request.subjectId()).
-                createdAt(LocalDate.now()).
-                build();
+        // 5. Construire et enregistrer l’examen
+        Exam exam = Exam.builder()
+                .title(request.title())
+                .type(ExamType.valueOf(request.type().toUpperCase()))
+                .year(request.year())
+                .pdfUrl(fileUrl)
+                .subjectId(request.subjectId())
+                .createdAt(LocalDate.now())
+                .build();
 
         return examRepository.save(exam);
     }
