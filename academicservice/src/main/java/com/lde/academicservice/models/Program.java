@@ -5,11 +5,12 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "programs")
 @Data
 @AllArgsConstructor
-@Document(collection = "levels")
-public class Level {
+public class Program {
     @Id
     private String id;
-    private String label;
+    private String name;
+    private String departmentId;
 }
