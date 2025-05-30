@@ -17,9 +17,12 @@ public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private Long userId;
     private String semesterId;
-
     private LocalDate subscriptionDate;
+    //abonnement actif ou pas
+    private boolean active;
+    public Subscription() {
+        // constructeur vide
+    }
 }
