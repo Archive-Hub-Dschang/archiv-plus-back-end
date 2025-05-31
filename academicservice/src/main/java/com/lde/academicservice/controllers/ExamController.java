@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +25,7 @@ public class ExamController {
     private final ExamService examService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('Collaborateur')")
     public ResponseEntity<Exam> createExam(@RequestParam String title, @RequestParam MultipartFile pdf, @RequestParam int year, @RequestParam String subjectId, @RequestParam String type,@RequestParam int downloadCount) {
         CreateExamRequest request = new CreateExamRequest(title, pdf, year, subjectId, type,downloadCount);
         try {

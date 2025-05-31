@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.mongodb.client.result.UpdateResult; // Import pour UpdateResult
 
 import java.io.File;
 import java.io.IOException;
@@ -42,27 +43,21 @@ public class ExamService {
     private final ProgramRepository programRepository;
     private final MongoTemplate mongoTemplate;
 
-    // Méthode utilitaire pour reconstruire le chemin physique du fichier
+    private static final String BASE_UPLOAD_DIR = "C:/fichiers";
+
     private Path getPhysicalFilePath(String pdfUrl) {
         if (pdfUrl == null || !pdfUrl.startsWith("/uploads/")) {
-            // Gérer les cas où l'URL n'est pas valide ou ne correspond pas au format attendu
             throw new IllegalArgumentException("Format d'URL PDF invalide: " + pdfUrl);
         }
-        // Extraire le nom de fichier unique de l'URL (ex: /uploads/UUID_original.pdf -> UUID_original.pdf)
         String uniqueFilename = pdfUrl.substring("/uploads/".length());
-        // Reconstruire le chemin physique absolu sur le système de fichiers
-        return Paths.get(System.getProperty("user.dir"), "uploads", uniqueFilename);
+        return Paths.get(BASE_UPLOAD_DIR, uniqueFilename);
     }
 
-    // Méthode utilitaire pour extraire le nom de fichier original (après l'UUID)
     private String extractOriginalFileName(String uniqueFilename) {
-        // Cherche le premier underscore après l'UUID
         int underscoreIndex = uniqueFilename.indexOf('_');
         if (underscoreIndex != -1 && underscoreIndex < uniqueFilename.length() - 1) {
-            // Retourne la partie après l'underscore
             return uniqueFilename.substring(underscoreIndex + 1);
         }
-        // Si aucun underscore n'est trouvé ou si le format est inattendu, retourne le nom unique
         return uniqueFilename;
     }
 
@@ -70,39 +65,30 @@ public class ExamService {
         MultipartFile file = request.pdf();
 
         String originalFilename = file.getOriginalFilename();
-        // Crée un nom de fichier unique en préfixant avec un UUID
         String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
 
-        // Détermine le chemin absolu du dossier 'uploads' dans le répertoire du projet
-        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads");
-        // Crée le dossier s'il n'existe pas
+        Path uploadPath = Paths.get(BASE_UPLOAD_DIR);
         Files.createDirectories(uploadPath);
 
-        // Construit le chemin complet du fichier physique à enregistrer
         Path filePath = uploadPath.resolve(uniqueFilename);
-        // Transfère le fichier téléchargé vers l'emplacement physique
         file.transferTo(filePath.toFile());
 
-        // Construit l'URL relative pour l'accès web (stockée dans le modèle)
         String pdfUrl = "/uploads/" + uniqueFilename;
-
-        // Construit et enregistre l'examen
 
         Exam exam = Exam.builder()
                 .title(request.title())
                 .type(ExamType.valueOf(request.type().toUpperCase()))
                 .year(request.year())
-                .pdfUrl(pdfUrl) // Seul pdfUrl est stocké dans l'entité Exam
+                .pdfUrl(pdfUrl)
                 .subjectId(request.subjectId())
                 .createdAt(LocalDate.now())
-                .downloadCount(0) // Initialise le compteur de téléchargement
+                .downloadCount(0)
                 .build();
 
         return examRepository.save(exam);
     }
 
     public List<Exam> filterExamsFlexible(String departmentId, String programId, String levelId, String semesterId, String subjectId) {
-        // Logique de filtrage des examens basée sur divers critères
         List<Subject> subjects = subjectRepository.findAll();
 
         if (semesterId != null) {
@@ -157,22 +143,18 @@ public class ExamService {
     }
 
     public Page<Exam> getAllExams(Pageable pageable) {
-        // Récupère tous les examens avec pagination
         return examRepository.findAll(pageable);
     }
 
     public Optional<Exam> getExamById(String id) {
-        // Récupère un examen par son ID
         return examRepository.findById(id);
     }
 
     public List<Exam> getMostDownloadedExams(int limit) {
-        // Récupère les examens les plus téléchargés
         return examRepository.findTopByOrderByDownloadCountDesc(limit);
     }
 
     public Exam updateExam(String id, Exam examUpdate) {
-        // Met à jour un examen existant
         Optional<Exam> existingExamOpt = examRepository.findById(id);
 
         if (existingExamOpt.isEmpty()) {
@@ -181,7 +163,6 @@ public class ExamService {
 
         Exam existingExam = existingExamOpt.get();
 
-        // Met à jour uniquement les champs non nuls de l'objet de mise à jour
         if (examUpdate.getTitle() != null) {
             existingExam.setTitle(examUpdate.getTitle());
         }
@@ -201,9 +182,6 @@ public class ExamService {
             existingExam.setCreatedAt(examUpdate.getCreatedAt());
         }
 
-        if (examUpdate.getTags() != null) {
-            existingExam.setTags(examUpdate.getTags());
-        }
 
         return examRepository.save(existingExam);
     }
@@ -218,74 +196,93 @@ public class ExamService {
 
         Exam exam = examOpt.get();
 
-        // MODIFICATION ICI : Reconstruire le chemin physique à partir de pdfUrl pour la suppression
         if (exam.getPdfUrl() != null) {
             Path filePath = getPhysicalFilePath(exam.getPdfUrl());
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                System.out.println("Fichier supprimé physiquement : " + filePath.toString());
+                System.out.println("DEBUG: Fichier supprimé physiquement : " + filePath.toString());
             } else {
-                System.out.println("Le fichier physique n'existe pas à l'emplacement attendu : " + filePath.toString());
+                System.out.println("DEBUG: Le fichier physique n'existe pas à l'emplacement attendu pour suppression : " + filePath.toString());
             }
         }
 
-        // Supprime l'examen de la base de données
         examRepository.deleteById(id);
-        System.out.println("Examen supprimé de la base de données : " + id);
+        System.out.println("DEBUG: Examen supprimé de la base de données : " + id);
     }
 
 
     public void downloadExam(String id, HttpServletResponse response) throws IOException {
+        System.out.println("DEBUG: Début du téléchargement pour l'examen ID : " + id);
         Optional<Exam> examOpt = examRepository.findById(id);
 
         if (examOpt.isEmpty()) {
+            System.err.println("ERREUR: Examen non trouvé avec l'id: " + id);
             throw new RuntimeException("Examen non trouvé avec l'id: " + id);
         }
 
         Exam exam = examOpt.get();
+        System.out.println("DEBUG: Examen trouvé : " + exam.getTitle() + " (ID: " + exam.getId() + ")");
 
-        // MODIFICATION ICI : Reconstruire le chemin physique à partir de pdfUrl pour le téléchargement
         if (exam.getPdfUrl() == null) {
+            System.err.println("ERREUR: URL PDF non trouvée pour l'examen: " + id);
             throw new RuntimeException("URL PDF non trouvée pour l'examen: " + id);
         }
 
         Path filePath = getPhysicalFilePath(exam.getPdfUrl());
+        System.out.println("DEBUG: Chemin physique du fichier : " + filePath.toString());
 
         if (!Files.exists(filePath)) {
+            System.err.println("ERREUR: Fichier physique non trouvé à l'emplacement: " + filePath.toString());
             throw new IOException("Fichier non trouvé: " + filePath.toString());
         }
+        System.out.println("DEBUG: Fichier physique trouvé et accessible.");
 
         // Incrémentation atomique du compteur de téléchargement
         Query query = new Query(Criteria.where("id").is(id));
         Update update = new Update().inc("downloadCount", 1);
-        mongoTemplate.updateFirst(query, update, Exam.class);
-        System.out.println("Compteur de téléchargement incrémenté pour l'examen : " + id);
 
-        // MODIFICATION ICI : Extraire le nom de fichier original de l'URL unique pour l'en-tête de téléchargement
+        // Exécuter la mise à jour et vérifier le résultat
+        UpdateResult result = mongoTemplate.updateFirst(query, update, Exam.class);
+        if (result.wasAcknowledged() && result.getModifiedCount() > 0) {
+            System.out.println("DEBUG: Compteur de téléchargement incrémenté avec succès pour l'examen : " + id + ". Documents modifiés : " + result.getModifiedCount());
+        } else {
+            System.err.println("AVERTISSEMENT: Échec de l'incrémentation du compteur de téléchargement pour l'examen : " + id + ". Documents modifiés : " + result.getModifiedCount() + ". Acknowledged : " + result.wasAcknowledged());
+        }
+
         String uniqueFilenameInUrl = exam.getPdfUrl().substring(exam.getPdfUrl().lastIndexOf('/') + 1);
         String fileNameToDownload = extractOriginalFileName(uniqueFilenameInUrl);
+        System.out.println("DEBUG: Nom de fichier pour le téléchargement : " + fileNameToDownload);
 
-        // Définir les en-têtes de réponse pour le téléchargement
+        response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileNameToDownload + "\"");
-        // La taille du fichier est toujours prise en compte pour le téléchargement, elle est lue directement du fichier physique
         response.setContentLengthLong(Files.size(filePath));
+        System.out.println("DEBUG: En-têtes de réponse définis. Taille du fichier : " + Files.size(filePath) + " octets.");
 
-        // Stream du fichier vers la réponse HTTP
         try (InputStream inputStream = Files.newInputStream(filePath);
              OutputStream outputStream = response.getOutputStream()) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
+            long totalBytesRead = 0; // Pour suivre les octets réellement lus et écrits
+
+            System.out.println("DEBUG: Début du streaming du fichier...");
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
+                totalBytesRead += bytesRead;
             }
             outputStream.flush();
+            System.out.println("DEBUG: Streaming du fichier terminé. Octets transférés : " + totalBytesRead);
+        } catch (IOException e) {
+            System.err.println("ERREUR: Erreur d'E/S pendant le streaming du fichier " + fileNameToDownload + " (ID: " + id + ") : " + e.getMessage());
+            e.printStackTrace(); // Affiche la stack trace complète
+            // Il est important de ne pas relancer l'exception ici si la réponse a déjà commencé,
+            // car le client pourrait déjà avoir une connexion fermée.
         }
+        System.out.println("DEBUG: Fin de la méthode downloadExam pour l'examen ID : " + id);
     }
 
 
     public List<Exam> getRecentDownloadedExams(int limit) {
-        // Récupère les examens récemment téléchargés avec pagination et tri
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createAt"));
         return examRepository.findAll(pageable).getContent();
     }

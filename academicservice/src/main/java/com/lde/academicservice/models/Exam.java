@@ -26,7 +26,6 @@ public class Exam {
 
     private String pdfUrl;
     private String subjectId;
-    private String[] tags;
     private int downloadCount;
     @CreatedDate
     private LocalDate createdAt;
