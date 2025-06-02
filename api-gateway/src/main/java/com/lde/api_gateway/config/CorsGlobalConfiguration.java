@@ -14,7 +14,7 @@ public class CorsGlobalConfiguration {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowCredentials(true); // important si tu envoies des cookies / Authorization headers
+        corsConfig.setAllowCredentials(true);
         corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
