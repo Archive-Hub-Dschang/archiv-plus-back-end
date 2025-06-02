@@ -22,4 +22,8 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private RoleName role ;
+
 }

@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class ExamDTO {
     private String id;
-    private String name  ;
-    private String filePath;
+    private String title  ;
+    private String pdfUrl;
     private String correctionId;
 
 }
