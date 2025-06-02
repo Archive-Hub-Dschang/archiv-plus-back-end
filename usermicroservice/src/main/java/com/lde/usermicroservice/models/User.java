@@ -1,23 +1,25 @@
 package com.lde.usermicroservice.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+import java.util.UUID;
+
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
-
-public abstract class User {
+public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, unique = true)
+    private String username;
+
 }
