@@ -11,6 +11,4 @@ import java.util.Set;
 
 public interface ExamRepository extends MongoRepository<Exam, String> {
     List<Exam> findBySubjectIdIn(Set<String> subjectId);
-
-    List<Exam> findTopByOrderByDownloadCountDesc(int limit);
 }
