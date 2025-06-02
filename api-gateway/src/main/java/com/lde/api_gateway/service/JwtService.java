@@ -2,14 +2,12 @@ package com.lde.api_gateway.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,12 +16,11 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     // La clé doit être suffisamment longue (au moins 256 bits pour HS256)
-    @Value("${app.jwt.secret}")
-    private String jwtSecret;
+    private final String SECRET_KEY = "a8Ld9YfGqU7xvRQzM4eTiPjBsX1wEnClZg3mVu6KtR0AhDbJWpNyoF2cMEHbLaTXrVZnsfOY9GQiK7mtlURcAeWJPdXkCyoMFgvN6zqLD3Rj9HpT5EsuXYwb8ZgKNtxvMiFLAWh1oe7cV0rBQdGkMXUfTpyI4NbmRWsa93VTOKf6zqjYELCAhZlPb2XM7goJDwNxtBKs63a1CmVlHY9TZrLGJ0NRqWtEehpdCvfQKzyiJMuORAX4FgWS8bm53cEjrKhvdaNYPlHoLz2xTMVG";
 
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret));
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
     public String extractUsername(String token) {
