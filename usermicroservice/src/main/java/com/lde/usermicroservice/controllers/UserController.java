@@ -21,13 +21,18 @@ public class UserController {
         String username = regiseterUserRequestDto.getUsername();
         String email = regiseterUserRequestDto.getEmail();
         String password = regiseterUserRequestDto.getPassword();
-        return ResponseEntity.ok(new AuthResponseDTO(userService.registerUser(username, email, password)));
+        return ResponseEntity.ok(new AuthResponseDTO(username, email, userService.registerUser(username, email, password)));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody LoginUserRequestDTO loginUserRequestDTO) {
         String email = loginUserRequestDTO.getEmail();
         String password = loginUserRequestDTO.getPassword();
-        return ResponseEntity.ok(new AuthResponseDTO(userService.loginUser(email, password)));
+        return ResponseEntity.ok(userService.loginUser(email, password));
+    }
+
+    @GetMapping("/protected/test")
+    public ResponseEntity<?> testProtectedRoute() {
+        return ResponseEntity.ok().body("{\"message\": \"Accès autorisé via JWT ✅\"}");
     }
 }
