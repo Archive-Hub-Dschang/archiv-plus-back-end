@@ -14,6 +14,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter implements WebFilter {
@@ -35,14 +37,9 @@ public class JwtAuthenticationFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        // Créer Authentication
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                new User(username, "", jwtService.getAuthorities(token)),
-                null,
-                jwtService.getAuthorities(token)
-        );
+        // Authentification minimale : principal = username, credentials = null, authorities = null
+        var authToken = new UsernamePasswordAuthenticationToken(username, null, List.of());
 
-        // Injecter dans le contexte de sécurité
         return chain.filter(exchange)
                 .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(
                         Mono.just(new SecurityContextImpl(authToken))
