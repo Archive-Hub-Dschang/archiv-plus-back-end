@@ -3,15 +3,21 @@ package com.lde.usermicroservice.models;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
+import java.util.Collection;
 
+@Entity
+@Table(name = "users")
 @Data
 @NoArgsConstructor
-@Entity(name = "users")
+@AllArgsConstructor
+@Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -19,7 +25,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    @Enumerated(EnumType.STRING) // Stocke le nom de l'énumération (ex: "ROLE_USER")
+    @Column(nullable = false)
+    private RoleName roles; // Chaque utilisateur a un unique rôle
+
+
 
 }
