@@ -286,7 +286,7 @@ public class ExamService {
 
     public List<Exam> getRecentDownloadedExams(int limit) {
         // Récupère les examens récemment téléchargés avec pagination et tri
-        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createAt"));
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         return examRepository.findAll(pageable).getContent();
     }
 }

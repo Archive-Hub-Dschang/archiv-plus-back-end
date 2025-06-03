@@ -98,7 +98,7 @@ public class ExamController {
         }
     }
 
-    // DOWNLOAD - Download exam with count tracking
+    // DOWNLOAD
     @GetMapping("/download/{id}")
     public void download(@PathVariable String id, HttpServletResponse response) throws IOException {
         examService.downloadExam(id, response);
