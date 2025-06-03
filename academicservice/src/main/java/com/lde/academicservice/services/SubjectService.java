@@ -1,36 +1,44 @@
-package com.lde.academicservice.controllers;
+package com.lde.academicservice.services;
 
+import com.lde.academicservice.models.Program;
 import com.lde.academicservice.models.Semester;
 import com.lde.academicservice.models.Subject;
+import com.lde.academicservice.repositories.ProgramRepository;
 import com.lde.academicservice.repositories.SemesterRepository;
 import com.lde.academicservice.repositories.SubjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class SubjectService {
     private final SubjectRepository subjectRepository;
     private final SemesterRepository semesterRepository;
+    private final ProgramRepository programRepository;
 
     public List<Subject> getSubjects(String departmentId, String programId, String levelId, String semesterId) {
-        Optional<Semester> semester = semesterRepository.findById(semesterId);
+        Semester semester = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new RuntimeException("Semestre non trouvé"));
 
-        if (semester.isEmpty()) {
-            throw new RuntimeException("Semestre non trouvé");
+        // Vérification du niveau
+        if (!semester.getLevelId().equals(levelId)) {
+            throw new RuntimeException("Le niveau ne correspond pas à ce semestre");
         }
 
-        Semester sem = semester.get();
-
-        // Vérifie si le semestre correspond bien au programme, niveau, etc.
-        if (!sem.getProgramId().equals(programId) || !sem.getLevelId().equals(levelId)) {
-            throw new RuntimeException("Incohérence dans les IDs fournis");
+        // Vérification du programme
+        if (!semester.getProgramId().equals(programId)) {
+            throw new RuntimeException("Le programme ne correspond pas à ce semestre");
         }
 
-        // Tu pourrais aussi ajouter une vérification du programme -> department ici si besoin.
+        Program program = programRepository.findById(programId)
+                .orElseThrow(() -> new RuntimeException("Programme non trouvé"));
+
+        // Vérification du département
+        if (!program.getDepartmentId().equals(departmentId)) {
+            throw new RuntimeException("Le département ne correspond pas à ce programme");
+        }
 
         return subjectRepository.findBySemesterId(semesterId);
     }
