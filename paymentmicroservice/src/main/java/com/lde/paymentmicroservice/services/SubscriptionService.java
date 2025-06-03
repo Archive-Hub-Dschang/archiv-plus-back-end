@@ -1,8 +1,8 @@
 package com.lde.paymentmicroservice.services;
 
 import com.lde.paymentmicroservice.clients.SemesterClient;
-import com.lde.academicservice.dto.SemesterDTO;
 import com.lde.paymentmicroservice.clients.UserClient;
+import com.lde.paymentmicroservice.dto.SemesterDTO;
 import com.lde.paymentmicroservice.dto.SubscriptionRequestDTO;
 import com.lde.paymentmicroservice.models.Subscription;
 import com.lde.paymentmicroservice.repositories.SubscriptionRepository;
