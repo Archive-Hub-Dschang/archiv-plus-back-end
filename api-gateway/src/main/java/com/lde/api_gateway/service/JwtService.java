@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
-    // La clé doit être suffisamment longue (au moins 256 bits pour HS256)
     private final String SECRET_KEY = "a8Ld9YfGqU7xvRQzM4eTiPjBsX1wEnClZg3mVu6KtR0AhDbJWpNyoF2cMEHbLaTXrVZnsfOY9GQiK7mtlURcAeWJPdXkCyoMFgvN6zqLD3Rj9HpT5EsuXYwb8ZgKNtxvMiFLAWh1oe7cV0rBQdGkMXUfTpyI4NbmRWsa93VTOKf6zqjYELCAhZlPb2XM7goJDwNxtBKs63a1CmVlHY9TZrLGJ0NRqWtEehpdCvfQKzyiJMuORAX4FgWS8bm53cEjrKhvdaNYPlHoLz2xTMVG";
 
 
@@ -39,14 +38,6 @@ public class JwtService {
         } catch (JwtException e) {
             return false;
         }
-    }
-
-    public List<GrantedAuthority> getAuthorities(String token) {
-        Claims claims = extractAllClaims(token);
-        List<String> roles = claims.get("roles", List.class);
-        return roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
     }
 
     private Claims extractAllClaims(String token) {
