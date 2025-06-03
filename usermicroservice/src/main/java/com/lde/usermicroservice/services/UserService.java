@@ -4,6 +4,7 @@ import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -61,4 +62,8 @@ public class UserService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    public User findById(Long id) {
+        return userRepository.findById(String.valueOf(id))
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+    }
 }

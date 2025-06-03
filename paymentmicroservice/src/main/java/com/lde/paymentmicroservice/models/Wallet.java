@@ -21,7 +21,7 @@ public class Wallet {
 
     private Long userId;
 
-    private Double balance = 18500.0;
+    private Double balance;
 
 }
 
