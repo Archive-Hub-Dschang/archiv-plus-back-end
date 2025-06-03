@@ -1,6 +1,6 @@
 package com.lde.usermicroservice.services;
 
-import com.lde.usermicroservice.clients.DocumentClient;
+import com.lde.usermicroservice.clients.ExamClient;
 import com.lde.usermicroservice.dto.DocumentDTO;
 import com.lde.usermicroservice.models.UserFavorite;
 import com.lde.usermicroservice.repositories.UserFavoriteRepository;
@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserFavoriteService {
     private final UserFavoriteRepository favoriteRepository;
-    private DocumentClient documentClient;
+    private ExamClient examClient;
 
     public List<DocumentDTO> getFavoriteDocuments(String userId) {
         List<UserFavorite> favorites = favoriteRepository.findByUserId(userId);
         return favorites.stream()
-                .map(fav -> documentClient.getDocumentById(fav.getDocumentId()))
+                .map(fav -> examClient.getDocumentById(fav.getDocumentId()))
                 .collect(Collectors.toList());
     }
 

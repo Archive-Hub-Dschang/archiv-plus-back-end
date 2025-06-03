@@ -1,9 +1,11 @@
 package com.lde.usermicroservice.services;
 
+import com.lde.usermicroservice.dto.UserDTO;
 import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,6 +16,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -22,6 +25,10 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     public final String secrets = "a8Ld9YfGqU7xvRQzM4eTiPjBsX1wEnClZg3mVu6KtR0AhDbJWpNyoF2cMEHbLaTXrVZnsfOY9GQiK7mtlURcAeWJPdXkCyoMFgvN6zqLD3Rj9HpT5EsuXYwb8ZgKNtxvMiFLAWh1oe7cV0rBQdGkMXUfTpyI4NbmRWsa93VTOKf6zqjYELCAhZlPb2XM7goJDwNxtBKs63a1CmVlHY9TZrLGJ0NRqWtEehpdCvfQKzyiJMuORAX4FgWS8bm53cEjrKhvdaNYPlHoLz2xTMVG";
 
+    public User getUserById(Long userId) {
+        return userRepository.findById(String.valueOf(userId))
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found"));
+    }
     public String registerUser(String username, String email, String password) {
         User user = new User();
         user.setUsername(username);

@@ -16,4 +16,5 @@ public class Semester {
     private String label;
     private String programId;
     private String levelId;
+    private LocalDate endSemesterDate;
 }

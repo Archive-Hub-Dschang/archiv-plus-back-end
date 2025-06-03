@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "academicservice")
-public interface DocumentClient {
+public interface ExamClient {
     @GetMapping("/{id}")
     DocumentDTO getDocumentById(@PathVariable String id);
 }

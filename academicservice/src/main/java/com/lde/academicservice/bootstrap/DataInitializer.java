@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Configuration
@@ -36,8 +37,8 @@ public class DataInitializer {
             mongoTemplate.save(prog);
 
             // Semesters
-            Semester s1 = new Semester(UUID.randomUUID().toString(), "Semestre 1", prog.getId(), l1.getId());
-            Semester s2 = new Semester(UUID.randomUUID().toString(), "Semestre 2", prog.getId(), l1.getId());
+            Semester s1 = new Semester(UUID.randomUUID().toString(), "Semestre 1", prog.getId(), l1.getId(), LocalDate.of(2025, 6, 30));
+            Semester s2 = new Semester(UUID.randomUUID().toString(), "Semestre 2", prog.getId(), l1.getId(), LocalDate.of(2025, 12, 31));
             mongoTemplate.save(s1);
             mongoTemplate.save(s2);
 
