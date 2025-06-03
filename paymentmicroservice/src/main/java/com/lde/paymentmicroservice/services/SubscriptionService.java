@@ -18,11 +18,13 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SemesterClient semesterClient;
     private final UserClient userClient ;
+    private final WalletService walletService;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, SemesterClient semesterClient, UserClient userClient) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, SemesterClient semesterClient, UserClient userClient, WalletService walletService) {
         this.subscriptionRepository = subscriptionRepository;
         this.semesterClient = semesterClient;
         this.userClient = userClient;
+        this.walletService = walletService;
     }
 
     public Subscription createSubscription(SubscriptionRequestDTO request) {
@@ -40,7 +42,10 @@ public class SubscriptionService {
         subscription.setSemesterId(request.getSemesterId());
         subscription.setSubscriptionDate(LocalDate.now());
         subscription.setEndSubscriptionDate(semester.getEndSemesterDate());
+        subscription.setAmount(request.getAmount());
         subscription.setActive(true);
+
+        walletService.debit(request.getUserId(), request.getAmount());
 
         return subscriptionRepository.save(subscription);
     }

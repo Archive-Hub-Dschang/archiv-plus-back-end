@@ -21,6 +21,7 @@ public class Subscription {
     private String semesterId;
     private LocalDate subscriptionDate;
     private LocalDate endSubscriptionDate;
+    private Double amount;
     //abonnement actif ou pas
     private boolean active;
     public Subscription() {
