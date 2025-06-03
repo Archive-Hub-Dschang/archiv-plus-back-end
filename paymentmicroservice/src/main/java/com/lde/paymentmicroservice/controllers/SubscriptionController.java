@@ -1,5 +1,6 @@
 package com.lde.paymentmicroservice.controllers;
 
+import com.lde.paymentmicroservice.dto.SubscriptionRequestDTO;
 import com.lde.paymentmicroservice.models.Subscription;
 import com.lde.paymentmicroservice.repositories.SubscriptionRepository;
 import com.lde.paymentmicroservice.services.SubscriptionService;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -22,11 +24,9 @@ public class SubscriptionController {
 
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribe(
-            @RequestParam Long userId,
-            @RequestParam String semesterId
-    ) {
+            @RequestBody SubscriptionRequestDTO subscriptionRequestDTO) {
         try {
-            Subscription subscription = subscriptionService.createSubscription(userId, semesterId);
+            Subscription subscription = subscriptionService.createSubscription(subscriptionRequestDTO);
             return ResponseEntity.ok(subscription);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
@@ -53,10 +53,4 @@ public class SubscriptionController {
         }
 
     }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserSubscriptions(@PathVariable Long userId) {
-        return ResponseEntity.ok(subscriptionService.getUserSubscriptions(userId));
-    }
-
 }

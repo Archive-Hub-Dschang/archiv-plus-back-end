@@ -20,9 +20,11 @@ public class Subscription {
     private Long userId;
     private String semesterId;
     private LocalDate subscriptionDate;
+    private LocalDate endSubscriptionDate;
     //abonnement actif ou pas
     private boolean active;
     public Subscription() {
         // constructeur vide
     }
 }
+
