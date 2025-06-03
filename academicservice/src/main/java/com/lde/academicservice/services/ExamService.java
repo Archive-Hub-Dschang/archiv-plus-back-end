@@ -5,6 +5,7 @@ import com.lde.academicservice.dto.ExamWithCorrectionDTO;
 import com.lde.academicservice.models.*;
 import com.lde.academicservice.repositories.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +32,7 @@ public class ExamService {
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
     private final CorrectionRepository correctionRepository;
+
 
 
     public Exam createExam(CreateExamRequest request) throws IOException {

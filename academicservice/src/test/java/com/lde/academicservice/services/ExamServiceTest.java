@@ -1,6 +1,6 @@
 package com.lde.academicservice.services;
 
-import com.lde.academicservice.dtos.ExamWithCorrectionDTO;
+import com.lde.academicservice.dto.ExamWithCorrectionDTO;
 import com.lde.academicservice.models.*;
 import com.lde.academicservice.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
