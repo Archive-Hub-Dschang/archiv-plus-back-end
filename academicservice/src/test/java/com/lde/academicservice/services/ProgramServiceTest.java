@@ -1,5 +1,6 @@
 package com.lde.academicservice.services;
 
+import com.lde.academicservice.models.Department;
 import com.lde.academicservice.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,12 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+
 public class ProgramServiceTest {
 
     @Test
     void testGetProgramsByDepartmentId() {
         ProgramRepository mockRepo = mock(ProgramRepository.class);
+
 
         Program f1 = new Program("1", "Biologie animale", "3");
         Program f2 = new Program("2", "Biologie Vegetale", "3");
@@ -26,7 +28,7 @@ public class ProgramServiceTest {
         when(mockRepo.findByDepartmentId("3")).thenReturn(Arrays.asList(f1, f2));
 
         ProgramService service = new ProgramService(mockRepo);
-        List<Program> programs = service.getProgramsByDepartmentId("dep1");
+        List<Program> programs = service.getProgramsByDepartmentId("3");
         assertEquals(2, programs.size());
         assertEquals("Biologie animale", programs.getFirst().getName());
     }
