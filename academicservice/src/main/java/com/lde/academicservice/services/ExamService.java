@@ -1,8 +1,10 @@
 package com.lde.academicservice.services;
 
 import com.lde.academicservice.dto.CreateExamRequest;
+import com.lde.academicservice.dto.ExamWithCorrectionDTO;
 import com.lde.academicservice.models.*;
 import com.lde.academicservice.repositories.*;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,6 +30,8 @@ public class ExamService {
     private final SemesterRepository semesterRepository;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
+    private final CorrectionRepository correctionRepository;
+
 
     public Exam createExam(CreateExamRequest request) throws IOException {
         MultipartFile file = request.pdf();
@@ -35,7 +40,7 @@ public class ExamService {
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
         // 2. Déterminer un chemin absolu vers le dossier 'uploads' dans le répertoire du projet
-        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads");
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "exams");
         Files.createDirectories(uploadPath); // Crée le dossier s’il n’existe pas
 
         // 3. Construire le chemin complet du fichier à enregistrer
@@ -43,7 +48,7 @@ public class ExamService {
         file.transferTo(filePath.toFile());
 
         // 4. Construire l’URL d’accès (pour un serveur configuré pour servir /uploads)
-        String fileUrl = "/uploads/" + filename;
+        String fileUrl = "/uploads/exams/" + filename;
 
         // 5. Construire et enregistrer l’examen
         Exam exam = Exam.builder()
@@ -58,64 +63,47 @@ public class ExamService {
         return examRepository.save(exam);
     }
 
-    public List<Exam> filterExamsFlexible(String departmentId, String programId, String levelId, String semesterId, String subjectId) {
-        // Étape 1 : On part de toutes les matières
-        List<Subject> subjects = subjectRepository.findAll();
+    public List<ExamWithCorrectionDTO> getExamsWithCorrections(
+            String departmentId,
+            String programId,
+            String levelId,
+            String semesterId,
+            String subjectId,
+            ExamType examType // CC ou EXAM
+    ) {
+        // Vérification des liens hiérarchiques
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Matière non trouvée"));
 
-        // On filtre selon semesterId si présent
-        if (semesterId != null) {
-            subjects = subjects.stream()
-                    .filter(s -> s.getSemesterId().equals(semesterId))
-                    .toList();
+        if (!subject.getSemesterId().equals(semesterId)) {
+            throw new RuntimeException("La matière ne correspond pas au semestre");
         }
 
-        // Étape 2 : On récupère les semestres concernés
-        Set<String> semesterIds = subjects.stream().map(Subject::getSemesterId).collect(Collectors.toSet());
-        List<Semester> semesters = semesterRepository.findAllById(semesterIds);
+        Semester semester = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new RuntimeException("Semestre non trouvé"));
 
-        if (programId != null) {
-            semesters = semesters.stream()
-                    .filter(s -> s.getProgramId().equals(programId))
-                    .toList();
+        if (!semester.getLevelId().equals(levelId)) {
+            throw new RuntimeException("Le niveau ne correspond pas au semestre");
         }
 
-        if (levelId != null) {
-            semesters = semesters.stream()
-                    .filter(s -> s.getLevelId().equals(levelId))
-                    .toList();
+        if (!semester.getProgramId().equals(programId)) {
+            throw new RuntimeException("Le programme ne correspond pas au semestre");
         }
 
-        // Étape 3 : Vérifier si les semestres correspondent au programme du département
-        if (departmentId != null) {
-            Set<String> programIds = semesters.stream()
-                    .map(Semester::getProgramId)
-                    .collect(Collectors.toSet());
-            List<Program> programs = programRepository.findAllById(programIds);
-            Set<String> filteredPrograms = programs.stream()
-                    .filter(p -> p.getDepartmentId().equals(departmentId))
-                    .map(Program::getId)
-                    .collect(Collectors.toSet());
+        Program program = programRepository.findById(programId)
+                .orElseThrow(() -> new RuntimeException("Programme non trouvé"));
 
-            semesters = semesters.stream()
-                    .filter(s -> filteredPrograms.contains(s.getProgramId()))
-                    .toList();
+        if (!program.getDepartmentId().equals(departmentId)) {
+            throw new RuntimeException("Le département ne correspond pas au programme");
         }
 
-        // Étape 4 : On filtre les subjects selon les semestres restants
-        Set<String> allowedSemesterIds = semesters.stream().map(Semester::getId).collect(Collectors.toSet());
-        subjects = subjects.stream()
-                .filter(s -> allowedSemesterIds.contains(s.getSemesterId()))
-                .toList();
+        // Récupération des épreuves
+        List<Exam> exams = examRepository.findBySubjectIdAndType(subjectId, examType);
 
-        if (subjectId != null) {
-            subjects = subjects.stream()
-                    .filter(s -> s.getId().equals(subjectId))
-                    .toList();
-        }
-
-        // Étape 5 : Récupération des exams liés à ces subjects
-        Set<String> subjectIds = subjects.stream().map(Subject::getId).collect(Collectors.toSet());
-        return examRepository.findBySubjectIdIn(subjectIds);
+        // Récupération des corrections
+        return exams.stream().map(exam -> {
+            Optional<Correction> correction = correctionRepository.findByExamId(exam.getId());
+            return new ExamWithCorrectionDTO(exam, correction.orElse(null));
+        }).toList();
     }
-
 }
