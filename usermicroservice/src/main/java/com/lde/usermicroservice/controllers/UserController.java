@@ -3,6 +3,8 @@ package com.lde.usermicroservice.controllers;
 import com.lde.usermicroservice.dto.AuthResponseDTO;
 import com.lde.usermicroservice.dto.LoginUserRequestDTO;
 import com.lde.usermicroservice.dto.RegisterUserRequestDTO;
+import com.lde.usermicroservice.dto.UserResponseDto;
+import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +36,11 @@ public class UserController {
     @GetMapping("/protected/test")
     public ResponseEntity<?> testProtectedRoute() {
         return ResponseEntity.ok().body("{\"message\": \"Accès autorisé via JWT ✅\"}");
+    }
+
+    @GetMapping("/{id}")
+    public UserResponseDto getUserById(@PathVariable Long id) {
+        User user = userService.findById(id);
+        return new UserResponseDto(user.getId(), user.getUsername(), user.getEmail());
     }
 }

@@ -1,6 +1,5 @@
 package com.lde.usermicroservice.services;
 
-import com.lde.usermicroservice.dto.AuthResponseDTO;
 import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
