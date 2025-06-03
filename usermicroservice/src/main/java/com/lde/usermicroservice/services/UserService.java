@@ -1,6 +1,6 @@
 package com.lde.usermicroservice.services;
 
-import com.lde.usermicroservice.dto.UserDTO;
+import com.lde.usermicroservice.dto.UserResponseDto;
 import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
@@ -66,6 +66,11 @@ public class UserService {
     private Key getSignKey() {
         byte[] keyBytes = secrets.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public User findById(Long id) {
+        return userRepository.findById(String.valueOf(id))
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
     }
 
 }

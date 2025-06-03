@@ -3,7 +3,7 @@ package com.lde.usermicroservice.controllers;
 import com.lde.usermicroservice.dto.AuthResponseDTO;
 import com.lde.usermicroservice.dto.LoginUserRequestDTO;
 import com.lde.usermicroservice.dto.RegisterUserRequestDTO;
-import com.lde.usermicroservice.dto.UserDTO;
+import com.lde.usermicroservice.dto.UserResponseDto;
 import com.lde.usermicroservice.models.User;
 import com.lde.usermicroservice.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +19,10 @@ public class UserController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserService userService;
 
-    @GetMapping("/{useId}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(userDTO);
+    @GetMapping("/{id}")
+    public UserResponseDto getUserById(@PathVariable Long id) {
+        User user = userService.findById(id);
+        return new UserResponseDto(user.getId(), user.getUsername(), user.getEmail());
     }
 
     @PostMapping("/register")
