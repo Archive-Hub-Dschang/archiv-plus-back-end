@@ -8,13 +8,11 @@ import java.time.LocalDate;
 public class SubscriptionRequestDTO {
     private String semesterId;
     private Long userId;
-    private LocalDate endSubscriptionDate;
     private LocalDate subscriptionDate;
 
-    public SubscriptionRequestDTO(String semesterId, Long userId, LocalDate endSubscriptionDate, LocalDate subscriptionDate) {
+    public SubscriptionRequestDTO(String semesterId, Long userId, LocalDate subscriptionDate) {
         this.semesterId = semesterId;
         this.userId = userId;
-        this.endSubscriptionDate = endSubscriptionDate;
         this.subscriptionDate = subscriptionDate;
     }
 }

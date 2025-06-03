@@ -39,4 +39,10 @@ public class UserController {
         String password = loginUserRequestDTO.getPassword();
         return ResponseEntity.ok(new AuthResponseDTO(userService.loginUser(email, password)));
     }
+
+    @GetMapping("/{id}")
+    public UserResponseDto getUserById(@PathVariable Long id) {
+        User user = userService.findById(id);
+        return new UserResponseDto(user.getId(), user.getUsername(), user.getEmail());
+    }
 }
