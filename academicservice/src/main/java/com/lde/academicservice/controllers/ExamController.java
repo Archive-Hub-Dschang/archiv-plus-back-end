@@ -1,48 +1,48 @@
 package com.lde.academicservice.controllers;
 
 import com.lde.academicservice.dto.CreateExamRequest;
+import com.lde.academicservice.dto.ExamWithCorrectionDTO;
 import com.lde.academicservice.models.Exam;
+import com.lde.academicservice.models.ExamType;
 import com.lde.academicservice.services.ExamService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/exams")
+@RequestMapping("/api/academics/exams")
 @RequiredArgsConstructor
 public class ExamController {
 
     private final ExamService examService;
 
     @PostMapping
-    public ResponseEntity<Exam> createExam(@RequestParam String title, @RequestParam MultipartFile pdf, @RequestParam int year, @RequestParam String subjectId, @RequestParam String type,@RequestParam int downloadCount) {
-        CreateExamRequest request = new CreateExamRequest(title, pdf, year, subjectId, type,downloadCount);
-        try {
-            Exam created = examService.createExam(request);
-            return ResponseEntity.ok(created);
-        } catch (Exception e) {
-            e.printStackTrace(); // ou log l'erreur
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Exam> uploadExam(
+            @RequestParam String title,
+            @RequestParam String type,
+            @RequestParam int year,
+            @RequestParam String subjectId,
+            @RequestParam("pdf") MultipartFile file
+    ) throws IOException {
+        CreateExamRequest request = new CreateExamRequest(title, type, year, subjectId, file);
+        Exam savedExam = examService.createExam(request);
+        return ResponseEntity.ok(savedExam);
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<List<Exam>> filterExams(
-            @RequestParam(required = false) String departmentId,
-            @RequestParam(required = false) String programId,
-            @RequestParam(required = false) String levelId,
-            @RequestParam(required = false) String semesterId,
-            @RequestParam(required = false) String subjectId
+    @GetMapping("/with-corrections")
+    public ResponseEntity<List<ExamWithCorrectionDTO>> getExamsWithCorrections(
+            @RequestParam String departmentId,
+            @RequestParam String programId,
+            @RequestParam String levelId,
+            @RequestParam String semesterId,
+            @RequestParam String subjectId,
+            @RequestParam ExamType type
     ) {
+ 
         List<Exam> exams = examService.filterExamsFlexible(departmentId, programId, levelId, semesterId, subjectId);
         return ResponseEntity.ok(exams);
     }
@@ -108,5 +108,7 @@ public class ExamController {
     @GetMapping("/hello")
     public String hello() {
         return "hello";
+   
+
     }
 }

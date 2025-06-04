@@ -1,26 +1,17 @@
 package com.lde.academicservice.services;
 
 import com.lde.academicservice.dto.CreateExamRequest;
+import com.lde.academicservice.dto.ExamWithCorrectionDTO;
 import com.lde.academicservice.models.*;
 import com.lde.academicservice.repositories.*;
-import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,122 +31,78 @@ public class ExamService {
     private final SemesterRepository semesterRepository;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
-    private final MongoTemplate mongoTemplate;
+    private final CorrectionRepository correctionRepository;
 
-    // Méthode utilitaire pour reconstruire le chemin physique du fichier
-    private Path getPhysicalFilePath(String pdfUrl) {
-        if (pdfUrl == null || !pdfUrl.startsWith("/uploads/")) {
-            // Gérer les cas où l'URL n'est pas valide ou ne correspond pas au format attendu
-            throw new IllegalArgumentException("Format d'URL PDF invalide: " + pdfUrl);
-        }
-        // Extraire le nom de fichier unique de l'URL (ex: /uploads/UUID_original.pdf -> UUID_original.pdf)
-        String uniqueFilename = pdfUrl.substring("/uploads/".length());
-        // Reconstruire le chemin physique absolu sur le système de fichiers
-        return Paths.get(System.getProperty("user.dir"), "uploads", uniqueFilename);
-    }
 
-    // Méthode utilitaire pour extraire le nom de fichier original (après l'UUID)
-    private String extractOriginalFileName(String uniqueFilename) {
-        // Cherche le premier underscore après l'UUID
-        int underscoreIndex = uniqueFilename.indexOf('_');
-        if (underscoreIndex != -1 && underscoreIndex < uniqueFilename.length() - 1) {
-            // Retourne la partie après l'underscore
-            return uniqueFilename.substring(underscoreIndex + 1);
-        }
-        // Si aucun underscore n'est trouvé ou si le format est inattendu, retourne le nom unique
-        return uniqueFilename;
-    }
 
     public Exam createExam(CreateExamRequest request) throws IOException {
         MultipartFile file = request.pdf();
 
-        String originalFilename = file.getOriginalFilename();
-        // Crée un nom de fichier unique en préfixant avec un UUID
-        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
+        // 1. Créer un nom de fichier unique
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-        // Détermine le chemin absolu du dossier 'uploads' dans le répertoire du projet
-        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads");
-        // Crée le dossier s'il n'existe pas
-        Files.createDirectories(uploadPath);
+        // 2. Déterminer un chemin absolu vers le dossier 'uploads' dans le répertoire du projet
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "exams");
+        Files.createDirectories(uploadPath); // Crée le dossier s’il n’existe pas
 
-        // Construit le chemin complet du fichier physique à enregistrer
-        Path filePath = uploadPath.resolve(uniqueFilename);
-        // Transfère le fichier téléchargé vers l'emplacement physique
+        // 3. Construire le chemin complet du fichier à enregistrer
+        Path filePath = uploadPath.resolve(filename);
         file.transferTo(filePath.toFile());
 
-        // Construit l'URL relative pour l'accès web (stockée dans le modèle)
-        String pdfUrl = "/uploads/" + uniqueFilename;
+        // 4. Construire l’URL d’accès (pour un serveur configuré pour servir /uploads)
+        String fileUrl = "/uploads/exams/" + filename;
 
-        // Construit et enregistre l'examen
-
+        // 5. Construire et enregistrer l’examen
         Exam exam = Exam.builder()
                 .title(request.title())
                 .type(ExamType.valueOf(request.type().toUpperCase()))
                 .year(request.year())
-                .pdfUrl(pdfUrl) // Seul pdfUrl est stocké dans l'entité Exam
+                .pdfUrl(fileUrl)
                 .subjectId(request.subjectId())
                 .createdAt(LocalDate.now())
-                .downloadCount(0) // Initialise le compteur de téléchargement
+                .downloadCount(0) 
                 .build();
 
         return examRepository.save(exam);
     }
 
-    public List<Exam> filterExamsFlexible(String departmentId, String programId, String levelId, String semesterId, String subjectId) {
-        // Logique de filtrage des examens basée sur divers critères
-        List<Subject> subjects = subjectRepository.findAll();
+    public List<ExamWithCorrectionDTO> getExamsWithCorrections(
+            String departmentId,
+            String programId,
+            String levelId,
+            String semesterId,
+            String subjectId,
+            ExamType examType // CC ou EXAM
+    ) {
+        // Vérification des liens hiérarchiques
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Matière non trouvée"));
 
-        if (semesterId != null) {
-            subjects = subjects.stream()
-                    .filter(s -> s.getSemesterId().equals(semesterId))
-                    .toList();
+        if (!subject.getSemesterId().equals(semesterId)) {
+            throw new RuntimeException("La matière ne correspond pas au semestre");
         }
 
-        Set<String> semesterIds = subjects.stream().map(Subject::getSemesterId).collect(Collectors.toSet());
-        List<Semester> semesters = semesterRepository.findAllById(semesterIds);
+        Semester semester = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new RuntimeException("Semestre non trouvé"));
 
-        if (programId != null) {
-            semesters = semesters.stream()
-                    .filter(s -> s.getProgramId().equals(programId))
-                    .toList();
+        if (!semester.getLevelId().equals(levelId)) {
+            throw new RuntimeException("Le niveau ne correspond pas au semestre");
         }
 
-        if (levelId != null) {
-            semesters = semesters.stream()
-                    .filter(s -> s.getLevelId().equals(levelId))
-                    .toList();
+        if (!semester.getProgramId().equals(programId)) {
+            throw new RuntimeException("Le programme ne correspond pas au semestre");
         }
 
-        if (departmentId != null) {
-            Set<String> programIds = semesters.stream()
-                    .map(Semester::getProgramId)
-                    .collect(Collectors.toSet());
-            List<Program> programs = programRepository.findAllById(programIds);
-            Set<String> filteredPrograms = programs.stream()
-                    .filter(p -> p.getDepartmentId().equals(departmentId))
-                    .map(Program::getId)
-                    .collect(Collectors.toSet());
+        Program program = programRepository.findById(programId)
+                .orElseThrow(() -> new RuntimeException("Programme non trouvé"));
 
-            semesters = semesters.stream()
-                    .filter(s -> filteredPrograms.contains(s.getProgramId()))
-                    .toList();
+        if (!program.getDepartmentId().equals(departmentId)) {
+            throw new RuntimeException("Le département ne correspond pas au programme");
         }
 
-        Set<String> allowedSemesterIds = semesters.stream().map(Semester::getId).collect(Collectors.toSet());
-        subjects = subjects.stream()
-                .filter(s -> allowedSemesterIds.contains(s.getSemesterId()))
-                .toList();
-
-        if (subjectId != null) {
-            subjects = subjects.stream()
-                    .filter(s -> s.getId().equals(subjectId))
-                    .toList();
-        }
-
-        Set<String> subjectIds = subjects.stream().map(Subject::getId).collect(Collectors.toSet());
-        return examRepository.findBySubjectIdIn(subjectIds);
-    }
-
+        // Récupération des épreuves
+        List<Exam> exams = examRepository.findBySubjectIdAndType(subjectId, examType);
+      
     public Page<Exam> getAllExams(Pageable pageable) {
         // Récupère tous les examens avec pagination
         return examRepository.findAll(pageable);
@@ -164,14 +111,7 @@ public class ExamService {
     public Optional<Exam> getExamById(String id) {
         // Récupère un examen par son ID
         return examRepository.findById(id);
-    }
-
-    public List<Exam> getMostDownloadedExams(int limit) {
-        // Récupère les examens les plus téléchargés
-        return examRepository.findTopByOrderByDownloadCountDesc(limit);
-    }
-
-    public Exam updateExam(String id, Exam examUpdate) {
+    } public Exam updateExam(String id, Exam examUpdate) {
         // Met à jour un examen existant
         Optional<Exam> existingExamOpt = examRepository.findById(id);
 
@@ -207,8 +147,7 @@ public class ExamService {
 
         return examRepository.save(existingExam);
     }
-
-    @SneakyThrows
+ @SneakyThrows
     public void deleteExam(String id) {
         Optional<Exam> examOpt = examRepository.findById(id);
 
@@ -233,8 +172,6 @@ public class ExamService {
         examRepository.deleteById(id);
         System.out.println("Examen supprimé de la base de données : " + id);
     }
-
-
     public void downloadExam(String id, HttpServletResponse response) throws IOException {
         Optional<Exam> examOpt = examRepository.findById(id);
 
@@ -281,12 +218,24 @@ public class ExamService {
             }
             outputStream.flush();
         }
-    }
-
 
     public List<Exam> getRecentDownloadedExams(int limit) {
         // Récupère les examens récemment téléchargés avec pagination et tri
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         return examRepository.findAll(pageable).getContent();
+
+        // Récupération des corrections
+        return exams.stream().map(exam -> {
+            Optional<Correction> correction = correctionRepository.findByExamId(exam.getId());
+            return new ExamWithCorrectionDTO(exam, correction.orElse(null));
+        }).toList();
+
     }
+      
+    public List<Exam> getMostDownloadedExams(int limit) {
+        // Récupère les examens les plus téléchargés
+        return examRepository.findTopByOrderByDownloadCountDesc(limit);
+    }
+
+    
 }
