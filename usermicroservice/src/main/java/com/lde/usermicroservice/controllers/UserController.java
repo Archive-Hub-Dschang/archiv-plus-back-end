@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserResponseDto getUserById(@PathVariable Long id) {
+    public UserResponseDto getUserById(@PathVariable String id) {
         User user = userService.findById(id);
         return new UserResponseDto(user.getId(), user.getUsername(), user.getEmail());
     }

@@ -23,14 +23,17 @@ public class ExamServiceTest {
     private ProgramRepository programRepository = mock(ProgramRepository.class);
     private ExamRepository examRepository = mock(ExamRepository.class);
     private CorrectionRepository correctionRepository = mock(CorrectionRepository.class);
+    private DepartmentRepository departmentRepository = mock(DepartmentRepository.class);
+
 
     @BeforeEach
     void setUp() {
         examService = new ExamService(
+                examRepository,
                 subjectRepository,
                 semesterRepository,
+                departmentRepository,
                 programRepository,
-                examRepository,
                 correctionRepository
         );
     }
