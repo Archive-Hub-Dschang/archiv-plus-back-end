@@ -41,4 +41,7 @@ public class UserService {
         return null;
     }
 
+    public User findById(String id) {
+        return userRepository.findById(id).orElse(null);
+    }
 }
