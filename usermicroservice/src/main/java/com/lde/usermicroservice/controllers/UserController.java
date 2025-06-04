@@ -19,12 +19,6 @@ public class UserController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserService userService;
 
-    @GetMapping("/{id}")
-    public UserResponseDto getUserById(@PathVariable Long id) {
-        User user = userService.findById(id);
-        return new UserResponseDto(user.getId(), user.getUsername(), user.getEmail());
-    }
-
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> registerUser(@RequestBody RegisterUserRequestDTO regiseterUserRequestDto) {
         String username = regiseterUserRequestDto.getUsername();

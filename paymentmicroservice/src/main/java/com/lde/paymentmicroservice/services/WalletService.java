@@ -21,7 +21,6 @@ public class WalletService {
     }
 
     private UserDto fetchUser(Long userId) {
-            System.out.println(userId);
         try {
             return userClient.getUserById(userId);
         } catch (FeignException.NotFound e) {

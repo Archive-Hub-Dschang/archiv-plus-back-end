@@ -28,11 +28,11 @@ public class SubscriptionService {
     }
 
     public Subscription createSubscription(SubscriptionRequestDTO request) {
-        if (request.getSemesterId() == null || request.getUserId() == null) {
-            throw new IllegalArgumentException("Semester ID and User ID must not be null");
-        }
         if (userClient.getUserById(request.getUserId()) == null) {
-            throw new EntityNotFoundException("utilisateur inexitant" + request.getUserId());
+            throw new EntityNotFoundException("Utilisateur inexitant" + request.getUserId());
+        }
+        if (semesterClient.getSemesterById(request.getSemesterId()) == null) {
+            throw new EntityNotFoundException("Semestre inexitant" + request.getSemesterId());
         }
 
         SemesterDTO semester = semesterClient.getSemesterById(request.getSemesterId());

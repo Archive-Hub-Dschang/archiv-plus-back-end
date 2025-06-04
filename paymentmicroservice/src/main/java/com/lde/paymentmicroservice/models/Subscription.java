@@ -25,7 +25,7 @@ public class Subscription {
     //abonnement actif ou pas
     private boolean active;
     public Subscription() {
-        // constructeur vide
+
     }
 }
 
