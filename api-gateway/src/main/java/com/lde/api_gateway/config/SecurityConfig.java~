@@ -21,11 +21,9 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .pathMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // <-- Ajouté ici
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
-
 }

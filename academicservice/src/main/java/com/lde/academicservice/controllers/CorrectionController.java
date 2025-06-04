@@ -1,43 +1,36 @@
 package com.lde.academicservice.controllers;
 
 import com.lde.academicservice.models.Correction;
-import com.lde.academicservice.repositories.CorrectionRepository;
 import com.lde.academicservice.services.CorrectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.NoSuchElementException;
+import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/exams")
+@RequestMapping("/api/academics/corrections")
 @RequiredArgsConstructor
 public class CorrectionController {
 
     private final CorrectionService correctionService;
 
-    @PostMapping("/{examId}/correction")
-    public ResponseEntity<?> uploadCorrection(@PathVariable String examId, @RequestParam("pdf") MultipartFile pdf) {
-        try {
-            Correction correction = correctionService.addCorrection(examId, pdf);
-            return ResponseEntity.ok(correction);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(409).body("Correction already exists for this exam");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error uploading correction");
-        }
+    @PostMapping("/{examId}")
+    public ResponseEntity<Correction> uploadCorrection(
+            @PathVariable String examId,
+            @RequestParam("pdf") MultipartFile pdf
+    ) throws IOException {
+        Correction savedCorrection = correctionService.addCorrection(examId, pdf);
+        return ResponseEntity.ok(savedCorrection);
     }
 
-    @GetMapping("/{examId}/correction")
-    public ResponseEntity<?> getCorrection(@PathVariable String examId) {
-        try {
-            Correction correction = correctionService.getCorrectionByExamId(examId);
-            return ResponseEntity.ok(correction);
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{examId}")
+    public ResponseEntity<Correction> getCorrection(@PathVariable String examId) {
+        Correction correction = correctionService.getCorrectionByExamId(examId);
+        return ResponseEntity.ok(correction);
     }
+
+
+
 }
