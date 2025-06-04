@@ -13,12 +13,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/academic/levels")
+@RequestMapping("/api/academics/levels")
 public class LevelController {
     private final LevelService levelService;
 
     @GetMapping
-    public ResponseEntity<List<Level>> getAllDepartments() {
+    public ResponseEntity<List<Level>> getAllLevels() {
         return ResponseEntity.ok(levelService.getAllLevels());
     }
 
