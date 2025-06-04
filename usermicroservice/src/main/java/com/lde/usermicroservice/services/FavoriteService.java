@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
-    private ExamClient examClient;
+    private final ExamClient examClient;
 
     public List<ExamDTO> getFavoriteExams(Long userId) {
         List<Favorite> favorites = favoriteRepository.findByUserId(userId);
